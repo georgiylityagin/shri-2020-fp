@@ -15,37 +15,90 @@
  * Ответ будет приходить в поле {result}
  */
 import Api from '../tools/api';
+import {
+  prop,
+  anyPass,
+  lt,
+  __,
+  gt,
+  length,
+  applySpec,
+  mathMod,
+  partial,
+  pipe,
+  last,
+  juxt,
+  identity,
+  pipeWith} from 'ramda';
 
 const api = new Api();
 
-/**
- * Я – пример, удали меня
- */
-const wait = time => new Promise(resolve => {
-    setTimeout(resolve, time);
-})
 
-const processSequence = ({value, writeLog, handleSuccess, handleError}) => {
-    /**
-     * Я – пример, удали меня
-     */
-    writeLog(value);
+const processSequence = async (obj) => {
+  const string = prop('value');
+  const writeLog = prop('writeLog', obj);
+  const handleSuccess = prop('handleSuccess', obj);
+  const handleError = prop('handleError', obj);
+  const isNaN = prop('isNaN', Number);
+  const round = prop('round', Math);
+  const pow = prop('pow', Math);
+  const get = prop('get', api);
+  const getResultProp = prop('result');
 
-    api.get('https://api.tech/numbers/base', {from: 2, to: 10, number: '01011010101'}).then(({result}) => {
-        writeLog(result);
-    });
+  const sqr = partial(pow, [2]);
+  const mathMod3 = mathMod(__, 3);
+  const sideWriteLog = pipe(juxt([writeLog, identity]), last);
+  const checkMaxlength = gt(__, 9);
+  const checkMinLength = lt(__, 3);
+  const isNegative = lt(__, 0);
+  const isTooLong = pipe(length, checkMaxlength);
+  const isTooShort = pipe(length, checkMinLength);
+  const isNotNumber = pipe(Number, isNaN);
+  const isError = anyPass([isNegative, isTooLong, isTooShort, isNotNumber]);
+  const validationLogic = pipe(string, sideWriteLog, isError);
 
-    wait(2500).then(() => {
-        writeLog('SecondLog')
+  const constructRequestParams = applySpec({
+    from: () => 10,
+    to: () => 2,
+    number: (x) => x
+  });
+  const apiDecimalToBinary = get('https://api.tech/numbers/base', __);
+  const roundValue = pipe(Number, round);
+  const apiGetAnimal = async (id) => await get(`https://animals.tech/${id}`, '');
 
-        return wait(1500);
-    }).then(() => {
-        writeLog('ThirdLog');
+  const asyncPipe = pipeWith(
+    (fn, res) => (res && res.then) 
+    ? res.then(fn).catch((error) => {handleError(error)})
+    : fn(res)
+  );
 
-        return wait(400);
-    }).then(() => {
-        handleSuccess('Done');
-    });
+  const processLogic = asyncPipe([
+    string,
+    roundValue,
+    sideWriteLog,
+    constructRequestParams,
+    apiDecimalToBinary,
+    getResultProp,
+    sideWriteLog,
+    length,
+    sideWriteLog,
+    sqr,
+    sideWriteLog,
+    mathMod3,
+    sideWriteLog,
+    apiGetAnimal,
+    getResultProp,
+    handleSuccess
+  ]);
+
+  const inputNotValid = validationLogic(obj);
+
+  if (inputNotValid) {
+    handleError('ValidationError');
+    return;
+  };
+
+  processLogic(obj);
 }
 
 export default processSequence;

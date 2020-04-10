@@ -142,18 +142,18 @@ export const validateFieldN6 = (obj) => {
   const isRed = equals('red');
   const filterGreen = filter(isGreen, __);
   const filterRed = filter(isRed, __);
-  const eq2 = equals(__, 2);
-  const eq1 = equals(__, 1);
+  const gte2 = gte(__, 2);
+  const gte1 = gte(__, 1);
 
   const checkTwoGreen = compose(
-    eq2,
+    gte2,
     length,
     filterGreen,
     values,
   );
   
   const checkOneRed = compose(
-    eq1,
+    gte1,
     length,
     filterRed,
     values

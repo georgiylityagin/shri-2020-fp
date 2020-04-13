@@ -9,3 +9,5 @@
 
 ### `npm install`
 ### `npm run start`
+
+### [GitHub Pages Link](https://georgiylityagin.github.io/shri-2020-fp/build/)

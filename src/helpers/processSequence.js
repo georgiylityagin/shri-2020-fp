@@ -29,7 +29,10 @@ import {
   last,
   juxt,
   identity,
-  pipeWith} from 'ramda';
+  pipeWith,
+  not,
+  cond,
+  isNil} from 'ramda';
 
 const api = new Api();
 
@@ -47,6 +50,7 @@ const processSequence = async (obj) => {
 
   const sqr = partial(pow, [2]);
   const mathMod3 = mathMod(__, 3);
+  const notEmpty = pipe(isNil, not);
   const sideWriteLog = pipe(juxt([writeLog, identity]), last);
   const checkMaxlength = gt(__, 9);
   const checkMinLength = lt(__, 3);
@@ -78,17 +82,25 @@ const processSequence = async (obj) => {
     sideWriteLog,
     constructRequestParams,
     apiDecimalToBinary,
-    getResultProp,
-    sideWriteLog,
-    length,
-    sideWriteLog,
-    sqr,
-    sideWriteLog,
-    mathMod3,
-    sideWriteLog,
-    apiGetAnimal,
-    getResultProp,
-    handleSuccess
+    cond([
+      [notEmpty, asyncPipe([
+        getResultProp,
+        sideWriteLog,
+        length,
+        sideWriteLog,
+        sqr,
+        sideWriteLog,
+        mathMod3,
+        sideWriteLog,
+        apiGetAnimal,
+        cond([
+          [notEmpty, asyncPipe([
+            getResultProp,
+            handleSuccess
+          ])]
+        ])
+      ])]
+    ])
   ]);
 
   const inputNotValid = validationLogic(obj);
